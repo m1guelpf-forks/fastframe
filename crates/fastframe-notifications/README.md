@@ -100,6 +100,7 @@ AppleScript, Terminal impersonation, or busy-run-loop heuristic is used.
 | Click and named actions while observed | Yes | Yes | Yes |
 | Replace and withdraw by key | Yes, within this client | Yes, including after restart | Yes, including after restart |
 | Live progress | Percentage and plain text | Ordinary notifications | Ordinary notifications |
+| Subtitle | First line of the body | Subtitle | Line above the body |
 | App icon | Theme icon, or `logo` | Application bundle icon | `logo` on its colour |
 | Avatar | Local image | Application icon | Local circular image |
 | Default / silent sound | Yes | Yes | Yes |

@@ -362,6 +362,7 @@ fn content(
     objc2::rc::autoreleasepool(|_| {
         let content = UNMutableNotificationContent::new();
         content.setTitle(&NSString::from_str(&notification.title));
+        content.setSubtitle(&NSString::from_str(&notification.subtitle));
         content.setBody(&NSString::from_str(&notification.body));
         match &notification.sound {
             Sound::Default => content.setSound(Some(&UNNotificationSound::defaultSound())),
@@ -697,6 +698,12 @@ mod tests {
             .sound()
             .is_some()
         );
+        let text = content(
+            &Notification::new("Test").subtitle("Subtitle").body("Body"),
+            "g",
+        );
+        assert_eq!(text.subtitle().to_string(), "Subtitle");
+        assert_eq!(text.body().to_string(), "Body");
         let request = UNNotificationRequest::requestWithIdentifier_content_trigger(
             &NSString::from_str("key"),
             &content(&Notification::new("Test"), "g"),

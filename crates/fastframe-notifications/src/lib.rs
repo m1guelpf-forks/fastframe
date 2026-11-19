@@ -176,6 +176,7 @@ pub enum Sound {
 #[derive(Clone, Debug)]
 pub struct Notification {
     pub(crate) title: String,
+    pub(crate) subtitle: String,
     pub(crate) body: String,
     pub(crate) key: Option<String>,
     pub(crate) sound: Sound,
@@ -190,6 +191,7 @@ impl Notification {
     pub fn new(title: impl Into<String>) -> Self {
         Self {
             title: title.into(),
+            subtitle: String::new(),
             body: String::new(),
             key: None,
             sound: Sound::Default,
@@ -199,6 +201,12 @@ impl Notification {
             persistent: false,
             actions: Vec::new(),
         }
+    }
+    /// Plain text line between the title and the body: the subtitle on macOS,
+    /// a line of its own above the body on Windows, the body's first line on Linux.
+    pub fn subtitle(mut self, subtitle: impl Into<String>) -> Self {
+        self.subtitle = subtitle.into();
+        self
     }
     /// Plain text message.
     pub fn body(mut self, body: impl Into<String>) -> Self {
@@ -245,6 +253,8 @@ impl Notification {
             || self.body.len() > 65536
             || self.title.is_empty()
             || self.title.contains('\0')
+            || self.subtitle.len() > 4096
+            || self.subtitle.contains('\0')
             || self.body.contains('\0')
             || self.key.as_ref().is_some_and(|key| !valid_key(key))
             || self.actions.len() > 4
@@ -496,6 +506,10 @@ mod tests {
                 Err(Error::InvalidInput)
             );
         }
+        assert_eq!(
+            Notification::new("Title").subtitle("a\0b").validate(),
+            Err(Error::InvalidInput)
+        );
         assert_eq!(
             Notification::new("Title")
                 .sound(Sound::Named("../outside.wav".into()))

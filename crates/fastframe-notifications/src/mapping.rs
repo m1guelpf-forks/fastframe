@@ -1,7 +1,7 @@
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
-use crate::App;
+use crate::{App, Notification};
 #[cfg(any(target_os = "windows", test))]
-use crate::{Error, Notification, Permission, Sound};
+use crate::{Error, Permission, Sound};
 #[cfg(any(target_os = "windows", test))]
 use sha2::{Digest as _, Sha256};
 #[cfg(any(target_os = "linux", test))]
@@ -46,16 +46,32 @@ pub(crate) fn windows_xml(value: &Notification) -> String {
             )
         })
         .collect();
+    let subtitle = if value.subtitle.is_empty() {
+        String::new()
+    } else {
+        format!("<text>{}</text>", escape(&value.subtitle))
+    };
     let sound = if value.sound == Sound::Silent {
         "<audio silent=\"true\"/>"
     } else {
         "<audio src=\"ms-winsoundevent:Notification.Default\"/>"
     };
     format!(
-        "<toast><visual><binding template=\"ToastGeneric\"><text>{}</text><text>{}</text>{image}</binding></visual><actions>{actions}</actions>{sound}</toast>",
+        "<toast><visual><binding template=\"ToastGeneric\"><text>{}</text>{subtitle}<text>{}</text>{image}</binding></visual><actions>{actions}</actions>{sound}</toast>",
         escape(&value.title),
         escape(&value.body)
     )
+}
+
+/// The Freedesktop body. The specification has no subtitle, so the subtitle
+/// is the body's first line.
+#[cfg(any(target_os = "linux", test))]
+pub(crate) fn linux_body(value: &Notification) -> String {
+    match (value.subtitle.as_str(), value.body.as_str()) {
+        ("", body) => body.into(),
+        (subtitle, "") => subtitle.into(),
+        (subtitle, body) => format!("{subtitle}\n{body}"),
+    }
 }
 
 /// Values of the app's `AppUserModelId` registry key. `IconUri` names the
@@ -289,6 +305,24 @@ mod tests {
         assert!(payload.contains("arguments=\"open&quot;x\""));
         assert!(payload.contains("content=\"&lt;open&gt;\""));
         assert!(payload.contains("<audio silent=\"true\"/>"));
+    }
+    #[test]
+    fn the_subtitle_is_a_line_above_the_body() {
+        let notification = Notification::new("Title").subtitle("A & B").body("Body");
+        assert!(
+            windows_xml(&notification)
+                .contains("<text>Title</text><text>A &amp; B</text><text>Body</text>")
+        );
+        assert!(
+            windows_xml(&Notification::new("Title").body("Body"))
+                .contains("<text>Title</text><text>Body</text>")
+        );
+        assert_eq!(linux_body(&notification), "A & B\nBody");
+        assert_eq!(
+            linux_body(&Notification::new("Title").subtitle("A & B")),
+            "A & B"
+        );
+        assert_eq!(linux_body(&Notification::new("Title").body("Body")), "Body");
     }
     #[test]
     fn stable_windows_ids_fit_both_native_limits() {

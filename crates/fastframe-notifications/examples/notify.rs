@@ -40,6 +40,7 @@ fn exercise() -> Result<(), fastframe_notifications::Error> {
     println!("Permission: {:?}", client.request_permission_blocking()?);
     let handle = client.show_with(
         Notification::new("Fastframe notification test")
+            .subtitle("Synthetic subtitle")
             .body("Plain text: <tag> & café")
             .key("synthetic-test")
             .sound(Sound::Silent),

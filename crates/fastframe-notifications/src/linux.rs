@@ -22,10 +22,11 @@ impl Session {
     }
     async fn post(&self, app: &App, value: &Notification, replace: u32) -> Result<u32, Error> {
         let desktop_entry = fastframe_desktop::desktop_entry(&app.desktop_entry);
+        let body = crate::mapping::linux_body(value);
         let body = if self.markup {
-            crate::mapping::escape(&value.body)
+            crate::mapping::escape(&body)
         } else {
-            value.body.clone()
+            body
         };
         let icon = app_icon(app);
         let image = value.image.as_ref().map(|path| path.to_string_lossy());
