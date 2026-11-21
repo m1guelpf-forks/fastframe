@@ -223,7 +223,9 @@ impl Notification {
         self.sound = sound;
         self
     }
-    /// Local avatar or image. macOS uses the application icon.
+    /// Local avatar or image. macOS shows it beside the text as the notification's
+    /// attachment and moves the file into its own store, so pass a copy the app
+    /// no longer needs. A file macOS can't read as an image only loses the image.
     pub fn image(mut self, path: impl Into<PathBuf>) -> Self {
         self.image = Some(path.into());
         self

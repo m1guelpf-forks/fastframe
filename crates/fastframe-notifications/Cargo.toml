@@ -42,13 +42,13 @@ block2 = { version = "0.6", default-features = false, features = ["std"] }
 objc2 = { version = "0.6", default-features = false, features = ["std"] }
 objc2-foundation = { version = "0.3", default-features = false, features = [
   "std", "NSArray", "NSBundle", "NSDictionary", "NSEnumerator", "NSError",
-  "NSObject", "NSSet", "NSString", "NSUUID",
+  "NSObject", "NSSet", "NSString", "NSURL", "NSUUID",
 ] }
 objc2-user-notifications = { version = "0.3", default-features = false, features = [
-  "std", "block2", "UNNotification", "UNNotificationAction", "UNNotificationCategory",
-  "UNNotificationContent", "UNNotificationRequest", "UNNotificationResponse",
-  "UNNotificationSettings", "UNNotificationSound", "UNNotificationTrigger",
-  "UNUserNotificationCenter",
+  "std", "block2", "UNNotification", "UNNotificationAction", "UNNotificationAttachment",
+  "UNNotificationCategory", "UNNotificationContent", "UNNotificationRequest",
+  "UNNotificationResponse", "UNNotificationSettings", "UNNotificationSound",
+  "UNNotificationTrigger", "UNUserNotificationCenter",
 ] }
 
 [target.'cfg(target_os = "windows")'.dependencies]

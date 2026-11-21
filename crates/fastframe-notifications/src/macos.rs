@@ -28,7 +28,8 @@ use objc2::{
     runtime::{Bool, ProtocolObject},
 };
 use objc2_foundation::{
-    NSArray, NSBundle, NSDictionary, NSError, NSObject, NSObjectProtocol, NSSet, NSString, NSUUID,
+    NSArray, NSBundle, NSDictionary, NSError, NSObject, NSObjectProtocol, NSSet, NSString, NSURL,
+    NSUUID,
 };
 use objc2_user_notifications::*;
 use std::{
@@ -371,6 +372,9 @@ fn content(
                 &NSString::from_str(name),
             ))),
         }
+        if let Some(image) = &notification.image {
+            attach(&content, image);
+        }
         let info = NSDictionary::from_slices(
             &[&*NSString::from_str(GENERATION)],
             &[&*NSString::from_str(generation)],
@@ -379,6 +383,27 @@ fn content(
         unsafe { content.setUserInfo(info.cast_unchecked()) };
         content
     })
+}
+/// Attaches the image at `path`, which macOS shows beside the text and moves into
+/// its attachment store. A file it can't use is logged and left out, and the
+/// notification goes without it.
+fn attach(content: &UNMutableNotificationContent, path: &std::path::Path) {
+    let Some(url) = NSURL::from_file_path(path) else {
+        log::warn!("notification image: not a file path");
+        return;
+    };
+    // SAFETY: `options` is `None`, so there is no dictionary whose types could be wrong.
+    let attachment = unsafe {
+        UNNotificationAttachment::attachmentWithIdentifier_URL_options_error(
+            &NSString::from_str("image"),
+            &url,
+            None,
+        )
+    };
+    match attachment {
+        Ok(attachment) => content.setAttachments(&NSArray::from_retained_slice(&[attachment])),
+        Err(error) => log::warn!("notification image: {}", error.localizedDescription()),
+    }
 }
 async fn submit(
     center: &UNUserNotificationCenter,
